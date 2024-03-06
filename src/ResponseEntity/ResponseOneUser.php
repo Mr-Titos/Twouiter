@@ -2,16 +2,24 @@
 
 namespace App\ResponseEntity;
 
-class ResponseAllUser
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+
+class ResponseOneUser
 {
     private int $id;
     private string $name;
     private string $mail;
+    private Collection $friends;
 
     function __construct($user) {
         $this->setId($user->getId());
         $this->setName($user->getName());
         $this->setMail($user->getMail());
+
+        $this->friends = new ArrayCollection();
+        foreach ($user->getFriends() as $friend)
+            $this->friends[] = new ResponseUserFriend($friend);
     }
     public function getId(): int
     {
@@ -41,5 +49,15 @@ class ResponseAllUser
     public function setMail(string $mail): void
     {
         $this->mail = $mail;
+    }
+
+    public function getFriends(): Collection
+    {
+        return $this->friends;
+    }
+
+    public function setFriends(Collection $friends): void
+    {
+        $this->friends = $friends;
     }
 }

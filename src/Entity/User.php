@@ -6,7 +6,6 @@ use App\Repository\UserRepository;
 use App\RequestEntity\RequestAddUser;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
@@ -24,7 +23,7 @@ class User
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $mail = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, unique: true)]
     private ?string $login = null;
 
     #[ORM\Column(length: 255)]
@@ -36,17 +35,12 @@ class User
     #[ORM\OneToMany(targetEntity: self::class, mappedBy: 'friendProperty')]
     private Collection $friends;
 
+    #[ORM\Column(length: 511, nullable: true)]
+    private ?string $description = null;
+
     public function __construct()
     {
         $this->friends = new ArrayCollection();
-    }
-
-    public function extractData(RequestAddUser $requestAddUser)
-    {
-        $this->name = $requestAddUser->getName();
-        $this->mail = $requestAddUser->getMail();
-        $this->login = $requestAddUser->getLogin();
-        $this->password = $requestAddUser->getPassword();
     }
 
     public function getId(): ?int
@@ -54,16 +48,19 @@ class User
         return $this->id;
     }
 
+    public function setId(?int $id): void
+    {
+        $this->id = $id;
+    }
+
     public function getName(): ?string
     {
         return $this->name;
     }
 
-    public function setName(string $name): static
+    public function setName(?string $name): void
     {
         $this->name = $name;
-
-        return $this;
     }
 
     public function getMail(): ?string
@@ -71,11 +68,9 @@ class User
         return $this->mail;
     }
 
-    public function setMail(?string $mail): static
+    public function setMail(?string $mail): void
     {
         $this->mail = $mail;
-
-        return $this;
     }
 
     public function getLogin(): ?string
@@ -83,11 +78,9 @@ class User
         return $this->login;
     }
 
-    public function setLogin(string $login): static
+    public function setLogin(?string $login): void
     {
         $this->login = $login;
-
-        return $this;
     }
 
     public function getPassword(): ?string
@@ -95,59 +88,38 @@ class User
         return $this->password;
     }
 
-    public function setPassword(string $password): static
+    public function setPassword(?string $password): void
     {
         $this->password = $password;
-
-        return $this;
     }
 
-    public function setId(string $id): static
-    {
-        $this->id = $id;
-
-        return $this;
-    }
-
-    public function getFriendProperty(): ?self
+    public function getFriendProperty(): ?User
     {
         return $this->friendProperty;
     }
 
-    public function setFriendProperty(?self $friendProperty): static
+    public function setFriendProperty(?User $friendProperty): void
     {
         $this->friendProperty = $friendProperty;
-
-        return $this;
     }
 
-    /**
-     * @return Collection<int, self>
-     */
     public function getFriends(): Collection
     {
         return $this->friends;
     }
 
-    public function addFriend(self $friend): static
+    public function setFriends(Collection $friends): void
     {
-        if (!$this->friends->contains($friend)) {
-            $this->friends->add($friend);
-            $friend->setFriendProperty($this);
-        }
-
-        return $this;
+        $this->friends = $friends;
     }
 
-    public function removeFriend(self $friend): static
+    public function getDescription(): ?string
     {
-        if ($this->friends->removeElement($friend)) {
-            // set the owning side to null (unless already changed)
-            if ($friend->getFriendProperty() === $this) {
-                $friend->setFriendProperty(null);
-            }
-        }
+        return $this->description;
+    }
 
-        return $this;
+    public function setDescription(?string $description): void
+    {
+        $this->description = $description;
     }
 }
