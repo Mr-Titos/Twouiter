@@ -4,13 +4,17 @@ namespace App\DataFixtures;
 
 use App\Entity\Twouit;
 use App\Entity\User;
+use App\Enum\RoleEnum;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class AppFixtures extends Fixture
 {
+    function __construct(private UserPasswordHasherInterface $passwordHasher) {}
     public function load(ObjectManager $manager): void
     {
+        $roles[] = RoleEnum::USER;
         $nbUsers = rand(6, 15);
         $users = [];
         for ($i = 0; $i < $nbUsers; $i++) {
@@ -20,6 +24,14 @@ class AppFixtures extends Fixture
             $user->setLogin($user->getMail());
             $user->setPassword('password'. $i);
             $user->setDescription('I am a FREE CITIZEN ' . $i);
+
+            // guarantee every user at least has ROLE_USER
+            $user->setRoles($roles);
+
+            // hash the password (based on the security.yaml config for the $user class)
+            $hashedPassword = $this->passwordHasher->hashPassword($user, $user->getPassword());
+            $user->setPassword($hashedPassword);
+
             $users[] = $user;
             $manager->persist($user);
         }

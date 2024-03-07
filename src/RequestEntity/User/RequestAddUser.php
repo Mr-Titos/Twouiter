@@ -19,7 +19,7 @@ class RequestAddUser
     private ?string $description = null;
 
     #[NotBlank()]
-    #[Length(min: 3, max: 255)]
+    #[Length(min: 3, max: 180)]
     private ?string $login = null;
 
     #[NotBlank()]

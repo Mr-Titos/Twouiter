@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Controller\AbstractTwouiterController\AbstractTwouiterController;
 use App\Entity\User;
+use App\Enum\RoleEnum;
 use App\RequestEntity\User\RequestAddUser;
 use App\RequestEntity\User\RequestUpdateUser;
 use App\ResponseEntity\User\ResponseAllUser;
@@ -13,6 +14,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
@@ -51,7 +53,7 @@ class UserController extends AbstractTwouiterController
     }
 
     #[Route('/user', name: 'create_user', methods: ['POST'])]
-    public function createU(Request $request, EntityManagerInterface $entityManager, ValidatorInterface $validator): JsonResponse
+    public function createU(Request $request, EntityManagerInterface $entityManager, ValidatorInterface $validator, UserPasswordHasherInterface $passwordHasher): JsonResponse
     {
         $controllerResponse = parent::create($request, $entityManager, $validator);
         if ($controllerResponse->getStatusCode() !== 200) {
@@ -59,6 +61,15 @@ class UserController extends AbstractTwouiterController
         }
 
         $entity = $controllerResponse->getContent();
+
+        // guarantee every user at least has the USER role
+        $roles[] = RoleEnum::USER;
+        $entity->setRoles($roles);
+
+        // hash the password (based on the security.yaml config for the $user class)
+        $hashedPassword = $passwordHasher->hashPassword($entity, $entity->getPassword());
+        $entity->setPassword($hashedPassword);
+
         $entityManager->persist($entity);
         $entityManager->flush();
 
