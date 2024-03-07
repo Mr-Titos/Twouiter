@@ -3,7 +3,6 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
-use App\RequestEntity\RequestAddUser;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -38,9 +37,13 @@ class User
     #[ORM\Column(length: 511, nullable: true)]
     private ?string $description = null;
 
+    #[ORM\OneToMany(targetEntity: Twouit::class, mappedBy: 'user', orphanRemoval: true)]
+    private Collection $twouits;
+
     public function __construct()
     {
         $this->friends = new ArrayCollection();
+        $this->twouits = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -121,5 +124,57 @@ class User
     public function setDescription(?string $description): void
     {
         $this->description = $description;
+    }
+
+    /**
+     * @return Collection<int, Twouit>
+     */
+    public function getTwouits(): Collection
+    {
+        return $this->twouits;
+    }
+
+    public function addTwouit(Twouit $twouit): static
+    {
+        if (!$this->twouits->contains($twouit)) {
+            $this->twouits->add($twouit);
+            $twouit->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeTwouit(Twouit $twouit): static
+    {
+        if ($this->twouits->removeElement($twouit)) {
+            // set the owning side to null (unless already changed)
+            if ($twouit->getUser() === $this) {
+                $twouit->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function addFriend(self $friend): static
+    {
+        if (!$this->friends->contains($friend)) {
+            $this->friends->add($friend);
+            $friend->setFriendProperty($this);
+        }
+
+        return $this;
+    }
+
+    public function removeFriend(self $friend): static
+    {
+        if ($this->friends->removeElement($friend)) {
+            // set the owning side to null (unless already changed)
+            if ($friend->getFriendProperty() === $this) {
+                $friend->setFriendProperty(null);
+            }
+        }
+
+        return $this;
     }
 }

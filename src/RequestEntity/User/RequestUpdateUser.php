@@ -1,9 +1,7 @@
 <?php
 
-namespace App\RequestEntity;
+namespace App\RequestEntity\User;
 
-use Doctrine\Inflector\Inflector;
-use Doctrine\Inflector\InflectorFactory;
 use Symfony\Component\Validator\Constraints\Email;
 use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\NotBlank;

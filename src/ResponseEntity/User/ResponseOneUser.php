@@ -1,6 +1,6 @@
 <?php
 
-namespace App\ResponseEntity;
+namespace App\ResponseEntity\User;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -19,7 +19,7 @@ class ResponseOneUser
 
         $this->friends = new ArrayCollection();
         foreach ($user->getFriends() as $friend)
-            $this->friends[] = new ResponseUserFriend($friend);
+            $this->friends[] = new ResponseUserMinimized($friend);
     }
     public function getId(): int
     {

@@ -2,136 +2,110 @@
 
 namespace App\Controller;
 
+use App\Controller\AbstractTwouiterController\AbstractTwouiterController;
 use App\Entity\User;
-use App\RequestEntity\RequestAddUser;
-use App\RequestEntity\RequestUpdateUser;
-use App\ResponseEntity\ResponseAllUser;
-use App\ResponseEntity\ResponseOneUser;
+use App\RequestEntity\User\RequestAddUser;
+use App\RequestEntity\User\RequestUpdateUser;
+use App\ResponseEntity\User\ResponseAllUser;
+use App\ResponseEntity\User\ResponseOneUser;
 use App\Service\ObjectUpdatingService;
-use Doctrine\Inflector\Inflector;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Routing\Attribute\Route;
 
-class UserController extends AbstractController
+class UserController extends AbstractTwouiterController
 {
-    private Serializer $serializer;
-    private ObjectUpdatingService $objectUpdatingService;
     function __construct() {
-        $this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
-        $this->objectUpdatingService = ObjectUpdatingService::getInstance();
+        parent::__construct();
+        $this->entityType = User::class;
+        $this->requestAddType = RequestAddUser::class;
+        $this->requestUpdateType = RequestUpdateUser::class;
+        $this->responseAllType = ResponseAllUser::class;
+        $this->responseOneType = ResponseOneUser::class;
     }
 
     #[Route('/user', name: 'get_user_all', methods: ['GET'])]
-    public function index(EntityManagerInterface $entityManager): JsonResponse
+    public function indexU(EntityManagerInterface $entityManager): JsonResponse
     {
-        $entities = $entityManager->getRepository(User::class)->findAll();
-
-        $responseEntities = array();
-        foreach($entities as $entity)
-            $responseEntities[] = new ResponseAllUser($entity);
-
-        return $this->json($this->serializer->serialize($responseEntities, 'json'));
+        $controllerResponse = parent::index($entityManager);
+        if ($controllerResponse->getStatusCode() !== 200) {
+            return $this->json(['error' => $controllerResponse->getMessage(),])->setStatusCode($controllerResponse->getStatusCode());
+        }
+        return $this->json($this->serializer->serialize($controllerResponse->getContent(), 'json'));
     }
 
     #[Route('/user/{id}', name: 'get_user_one', methods: ['GET'])]
-    public function detail(EntityManagerInterface $entityManager, $id): JsonResponse
+    public function detailU(EntityManagerInterface $entityManager, $id): JsonResponse
     {
-        try {
-            $entity = $entityManager->getRepository(User::class)->find($id);
-
-            if (!$entity)
-                throw new Exception('No object found for id '.$id, 404);
-
-            return $this->json($this->serializer->serialize(new ResponseOneUser($entity), 'json'));
-        } catch (\Exception $e) {
-            return $this->json(['error' => $e->getMessage(),])->setStatusCode($e->getCode() > 199 && $e->getCode() < 600 ? $e->getCode() : 500);
+        $controllerResponse = parent::detail($entityManager, $id);
+        if ($controllerResponse->getStatusCode() !== 200) {
+            return $this->json(['error' => $controllerResponse->getMessage(),])->setStatusCode($controllerResponse->getStatusCode());
         }
+        return $this->json($this->serializer->serialize($controllerResponse->getContent(), 'json'));
     }
 
     #[Route('/user', name: 'create_user', methods: ['POST'])]
-    public function createUser(Request $request, EntityManagerInterface $entityManager, ValidatorInterface $validator): JsonResponse
+    public function createU(Request $request, EntityManagerInterface $entityManager, ValidatorInterface $validator): JsonResponse
     {
-        try {
-            $bodyObject = json_decode($request->getContent());
-
-            $requestEntity = new RequestAddUser();
-            $this->objectUpdatingService->fillDataWithMatchingKeyByStaticProperties($requestEntity, $bodyObject);
-
-            $errors = $validator->validate($requestEntity);
-            if (count($errors) > 0)
-                throw new \Exception('Invalid object content', 400);
-
-            $entity = new User();
-            $this->objectUpdatingService->fillMissingDataWithOriginalEntity($requestEntity, $entity);
-            $entityManager->persist($entity);
-            $entityManager->flush();
-
-            return $this->json(['content' => 'Saved new object with id '.$entity->getId(),]);
-        } catch (\Exception $e) {
-            return $this->json(['error' => $e->getMessage(),])->setStatusCode($e->getCode() > 199 && $e->getCode() < 600 ? $e->getCode() : 500);
+        $controllerResponse = parent::create($request, $entityManager, $validator);
+        if ($controllerResponse->getStatusCode() !== 200) {
+            return $this->json(['error' => $controllerResponse->getMessage(),])->setStatusCode($controllerResponse->getStatusCode());
         }
+
+        $entity = $controllerResponse->getContent();
+        $entityManager->persist($entity);
+        $entityManager->flush();
+
+        return $this->json(['content' => 'Saved new object with id '.$entity->getId(),])->setStatusCode($controllerResponse->getStatusCode());
+
     }
 
     #[Route('/user/{id}', name: 'update_user', methods: ['PUT'])]
-    public function updateUser(Request $request, EntityManagerInterface $entityManager, ValidatorInterface $validator, $id): JsonResponse
+    public function updateU(Request $request, EntityManagerInterface $entityManager, ValidatorInterface $validator, $id): JsonResponse
     {
-        try {
-            $entity = $entityManager->getRepository(User::class)->find($id);
-
-            if (!$entity)
-                throw new Exception('No object found for id '.$id, 404);
-
-            $bodyObject = json_decode($request->getContent());
-            $requestEntity = new RequestUpdateUser();
-            $this->objectUpdatingService->fillDataWithMatchingKeyByStaticProperties($requestEntity, $entity);
-            $this->objectUpdatingService->fillDataWithMatchingKeyByDynamicProperties($requestEntity, $bodyObject);
-
-            $errors = $validator->validate($requestEntity);
-            if (count($errors) > 0)
-                throw new \Exception('Invalid object content', 400);
-
-            $this->objectUpdatingService->fillMissingDataWithOriginalEntity($requestEntity, $entity);
-            $entityManager->persist($entity);
-            $entityManager->flush();
-
-            return $this->json(['content' => 'Updated new object with id '.$entity->getId()]);
-        } catch (\Exception $e) {
-            return $this->json(['error' => $e->getMessage(),])->setStatusCode($e->getCode() > 199 && $e->getCode() < 600 ? $e->getCode() : 500);
+        $controllerResponse = parent::update($request, $entityManager, $validator, $id);
+        if ($controllerResponse->getStatusCode() !== 200) {
+            return $this->json(['error' => $controllerResponse->getMessage(),])->setStatusCode($controllerResponse->getStatusCode());
         }
+
+        $entity = $controllerResponse->getContent();
+        $entityManager->persist($entity);
+        $entityManager->flush();
+
+        return $this->json(['content' => 'Updated object with id '.$entity->getId(),])->setStatusCode($controllerResponse->getStatusCode());
     }
 
     #[Route('/user/{id}', name: 'delete_user', methods: ['DELETE'])]
-    public function deleteUser(EntityManagerInterface $entityManager, $id): JsonResponse
+    public function deleteU(EntityManagerInterface $entityManager, $id): JsonResponse
     {
-        try {
-            $entity = $entityManager->getRepository(User::class)->find($id);
-
-            if (!$entity)
-                throw new Exception('No object found for id '.$id, 404);
-
-            $entityManager->remove($entity);
-            $entityManager->flush();
-
-            return $this->json(['content' => 'Deleted object with id '.$id,]);
-        } catch (\Exception $e) {
-            return $this->json(['error' => $e->getMessage(),])->setStatusCode($e->getCode() > 199 && $e->getCode() < 600 ? $e->getCode() : 500);
+        $controllerResponse = parent::delete($entityManager, $id);
+        if ($controllerResponse->getStatusCode() !== 200) {
+            return $this->json(['error' => $controllerResponse->getMessage(),])->setStatusCode($controllerResponse->getStatusCode());
         }
+        // Remove the constraint of the friend relation
+        $entity = $controllerResponse->getContent();
+        foreach ($entity->getFriends() as $friend) {
+            $entity->removeFriend($friend);
+            $friend->removeFriend($entity);
+            $entityManager->persist($friend);
+        }
+        $entityManager->flush();
+
+        return $this->json(['content' => $controllerResponse->getMessage()]);
     }
 
     #[Route('/user/{id}/addFriend/{idF}', name: 'addFriend_user', methods: ['PUT'])]
     public function addFriend(EntityManagerInterface $entityManager, $id, $idF): JsonResponse
     {
         try {
-            $entity = $entityManager->getRepository(User::class)->find($id);
-            $entityF = $entityManager->getRepository(User::class)->find($idF);
+            $entity = $entityManager->getRepository($this->entityType)->find($id);
+            $entityF = $entityManager->getRepository($this->entityType)->find($idF);
 
             if (!$entity)
                 throw new Exception('No object found for id '.$id, 404);
@@ -141,6 +115,10 @@ class UserController extends AbstractController
             // No need to verify if they are already friend as it's already done in the method addFriend :D
             $entity->addFriend($entityF);
             $entityF->addFriend($entity);
+
+            $entityManager->persist($entity);
+            $entityManager->persist($entityF);
+            $entityManager->flush();
 
             return $this->json($this->serializer->serialize(new ResponseOneUser($entity), 'json'));
         } catch (\Exception $e) {
@@ -152,8 +130,8 @@ class UserController extends AbstractController
     public function removeFriend(EntityManagerInterface $entityManager, $id, $idF): JsonResponse
     {
         try {
-            $entity = $entityManager->getRepository(User::class)->find($id);
-            $entityF = $entityManager->getRepository(User::class)->find($idF);
+            $entity = $entityManager->getRepository($this->entityType)->find($id);
+            $entityF = $entityManager->getRepository($this->entityType)->find($idF);
 
             if (!$entity)
                 throw new Exception('No object found for id '.$id, 404);
@@ -163,6 +141,10 @@ class UserController extends AbstractController
             // No need to verify if they are already friend as it's already done in the method removeFriend :D
             $entity->removeFriend($entityF);
             $entityF->removeFriend($entity);
+
+            $entityManager->persist($entity);
+            $entityManager->persist($entityF);
+            $entityManager->flush();
 
             return $this->json($this->serializer->serialize(new ResponseOneUser($entity), 'json'));
         } catch (\Exception $e) {

@@ -4,9 +4,11 @@ namespace App\Service;
 
 use Doctrine\Inflector\Inflector;
 use Doctrine\Inflector\InflectorFactory;
+use Exception;
 use ReflectionException;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\PropertyAccess\PropertyAccessor;
+use Symfony\Component\String\UnicodeString;
 
 /**
  * Class ObjectUpdatingService
@@ -39,12 +41,13 @@ class ObjectUpdatingService
      * @return static
      * @throws ReflectionException
      */
-    public function fillDataWithMatchingKeyByStaticProperties($entityToFill, $objectStaticProperties) : object {
+    public function fillDataWithMatchingKeyByStaticProperties($entityToFill, $objectStaticProperties, $entityMarker = '_') : object {
         $reflection = new \ReflectionClass($objectStaticProperties);
         $properties = $reflection->getProperties();
         foreach ($properties as $property) {
-            $key = $this->inflector->camelize($property->getName());
+            $key = new UnicodeString($property->getName());
             if (property_exists($entityToFill, $key)) {
+                $keyUnMarked = $key->startsWith($entityMarker) ? $key->slice(1) : $key;
                 $entityToFill->{'set'.ucfirst($key)}($property->getValue($objectStaticProperties));
             }
         }
@@ -58,11 +61,12 @@ class ObjectUpdatingService
      * @return static
      */
     // Note: This method is needed as an object provided by the body of a request doesn't have properties by ReflectionClass
-    public function fillDataWithMatchingKeyByDynamicProperties($entityToFill, $objectDynamicProperties) : object {
+    public function fillDataWithMatchingKeyByDynamicProperties($entityToFill, $objectDynamicProperties, $entityMarker = '_') : object {
         foreach ($objectDynamicProperties as $key => $value) {
-            $key = $this->inflector->camelize($key);
+            $key = new UnicodeString($key);
             if (property_exists($entityToFill, $key)) {
-                $entityToFill->{'set'.ucfirst($key)}($this->propertyAccessor->getValue($objectDynamicProperties, $key));
+                $keyUnMarked = $key->startsWith($entityMarker) ? $key->slice(1) : $key;
+                $entityToFill->{'set'.ucfirst($keyUnMarked)}($this->propertyAccessor->getValue($objectDynamicProperties, $key));
             }
         }
         return $entityToFill;
@@ -75,12 +79,24 @@ class ObjectUpdatingService
      * Permit to update only the fields that are present in the request 👍
      * @return static
      * @throws ReflectionException
+     * @throws Exception
      */
-    public function fillMissingDataWithOriginalEntity($updatedEntity, $actualEntity) : object {
+    public function fillMissingDataWithOriginalEntity($updatedEntity, $actualEntity, $entityManager = null, $entityMarker = '_') : object {
         $reflection = new \ReflectionClass($updatedEntity);
         $properties = $reflection->getProperties();
         foreach ($properties as $property) {
-            $key = $property->getName();
+            $key = new UnicodeString($property->getName());
+
+            // If the property has an '_' at the beginning, it's an entity property as we need to search it with the provided entity manager
+            if ($key->ignoreCase()->startsWith($entityMarker)) {
+                $key = $key->slice(1);
+                $searchedEntity = $entityManager->getRepository('App\Entity\\'.ucfirst($key))->find($updatedEntity->{'get'.ucfirst($key)}());
+                if (!$searchedEntity)
+                    throw new Exception('No object found for id '.$updatedEntity->{'get'.ucfirst($key)}(), 404);
+
+                $actualEntity->{'set'.ucfirst($key)}($searchedEntity);
+                continue;
+            }
             if ($property->getValue($updatedEntity) != null) {
                 $key = $this->inflector->camelize($key);
                 $actualEntity->{'set'.ucfirst($key)}($updatedEntity->{'get'.ucfirst($key)}());
