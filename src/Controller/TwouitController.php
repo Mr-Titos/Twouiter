@@ -10,7 +10,6 @@ use App\RequestEntity\Twouit\RequestUpdateTwouit;
 use App\ResponseEntity\Twouit\ResponseAllTwouit;
 use App\ResponseEntity\Twouit\ResponseOneTwouit;
 use Doctrine\ORM\EntityManagerInterface;
-use Exception;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
