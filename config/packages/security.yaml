@@ -13,6 +13,7 @@ security:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
+            # a firewall with no pattern should be defined last because it will match all requests
         main:
             lazy: true
             provider: app_user_provider
