@@ -1,13 +1,16 @@
 <?php
 
-namespace App\ResponseEntity\User;
+namespace App\DTO\ResponseEntity\User;
 
-class ResponseAllUser
+class ResponseUserMinimized
 {
     private int $id;
     private string $name;
-    private string $mail;
 
+    function __construct($user) {
+        $this->setId($user->getId());
+        $this->setName($user->getName());
+    }
     public function getId(): int
     {
         return $this->id;
@@ -26,15 +29,5 @@ class ResponseAllUser
     public function setName(string $name): void
     {
         $this->name = $name;
-    }
-
-    public function getMail(): string
-    {
-        return $this->mail;
-    }
-
-    public function setMail(string $mail): void
-    {
-        $this->mail = $mail;
     }
 }

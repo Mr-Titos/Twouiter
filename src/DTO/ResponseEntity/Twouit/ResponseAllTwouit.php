@@ -1,6 +1,6 @@
 <?php
 
-namespace App\ResponseEntity\Twouit;
+namespace App\DTO\ResponseEntity\Twouit;
 
 class ResponseAllTwouit
 {

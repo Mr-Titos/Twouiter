@@ -1,12 +1,12 @@
 <?php
 
-namespace App\RequestEntity\User;
+namespace App\DTO\RequestEntity\User;
 
 use Symfony\Component\Validator\Constraints\Email;
 use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\NotBlank;
 
-class RequestUpdateUser
+class RequestAddUser
 {
     #[NotBlank()]
     private ?string $name = null;
@@ -17,6 +17,14 @@ class RequestUpdateUser
 
     #[Length(min: 0, max: 511)]
     private ?string $description = null;
+
+    #[NotBlank()]
+    #[Length(min: 3, max: 180)]
+    private ?string $login = null;
+
+    #[NotBlank()]
+    #[Length(min: 8, max: 255)]
+    private ?string $password = null;
 
     public function getName(): ?string
     {
@@ -46,5 +54,25 @@ class RequestUpdateUser
     public function setDescription(?string $description): void
     {
         $this->description = $description;
+    }
+
+    public function getLogin(): ?string
+    {
+        return $this->login;
+    }
+
+    public function setLogin(?string $login): void
+    {
+        $this->login = $login;
+    }
+
+    public function getPassword(): ?string
+    {
+        return $this->password;
+    }
+
+    public function setPassword(?string $password): void
+    {
+        $this->password = $password;
     }
 }

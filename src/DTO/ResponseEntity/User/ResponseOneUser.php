@@ -1,6 +1,6 @@
 <?php
 
-namespace App\ResponseEntity\User;
+namespace App\DTO\ResponseEntity\User;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;

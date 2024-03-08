@@ -10,7 +10,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20240307150314 extends AbstractMigration
+final class Version20240308131859 extends AbstractMigration
 {
     public function getDescription(): string
     {
@@ -20,6 +20,7 @@ final class Version20240307150314 extends AbstractMigration
     public function up(Schema $schema): void
     {
         // this up() migration is auto-generated, please modify it to your needs
+        $this->addSql('DROP SEQUENCE user_id_seq CASCADE');
         $this->addSql('CREATE TABLE twouit (id INT NOT NULL, user_id INT NOT NULL, msg_content VARCHAR(511) NOT NULL, entry_date TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, title VARCHAR(100) NOT NULL, PRIMARY KEY(id))');
         $this->addSql('CREATE INDEX IDX_B8ABFA8EA76ED395 ON twouit (user_id)');
         $this->addSql('CREATE TABLE "userT" (id INT NOT NULL, friend_property_id INT DEFAULT NULL, name VARCHAR(255) NOT NULL, mail VARCHAR(255) DEFAULT NULL, login VARCHAR(180) NOT NULL, roles JSON NOT NULL, password VARCHAR(255) NOT NULL, description VARCHAR(511) DEFAULT NULL, PRIMARY KEY(id))');
@@ -33,6 +34,7 @@ final class Version20240307150314 extends AbstractMigration
     {
         // this down() migration is auto-generated, please modify it to your needs
         $this->addSql('CREATE SCHEMA public');
+        $this->addSql('CREATE SEQUENCE user_id_seq INCREMENT BY 1 MINVALUE 1 START 1');
         $this->addSql('ALTER TABLE twouit DROP CONSTRAINT FK_B8ABFA8EA76ED395');
         $this->addSql('ALTER TABLE "userT" DROP CONSTRAINT FK_B189108253519001');
         $this->addSql('DROP TABLE twouit');

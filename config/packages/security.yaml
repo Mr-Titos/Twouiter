@@ -4,19 +4,41 @@ security:
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
     # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
     providers:
+        # used as a test because Symfony JWT way's to load user is not shit
+        #user_test:
+        #    id: App\Security\UserProvider
         # used to reload user from session & other features (e.g. switch_user)
-        app_user_provider:
+        user:
             entity:
                 class: App\Entity\User
                 property: login
+        # used to reload user from session & other features (e.g. switch_user)
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
             # a firewall with no pattern should be defined last because it will match all requests
-        main:
-            lazy: true
-            provider: app_user_provider
+
+        login:
+            pattern: ^/api/login
+            stateless: true
+            json_login:
+                check_path: login_check
+                success_handler: lexik_jwt_authentication.handler.authentication_success
+                failure_handler: lexik_jwt_authentication.handler.authentication_failure
+                username_path: login
+                password_path: password
+                provider: user
+
+        api:
+            pattern: ^/api
+            stateless: true
+            jwt: ~
+            provider: user
+
+        #main:
+        #    lazy: true
+        #    provider: app_user_provider
 
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#the-firewall
@@ -27,8 +49,9 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
-        # - { path: ^/admin, roles: ROLE_ADMIN }
-        # - { path: ^/profile, roles: ROLE_USER }
+        #- { path: ^/api/login, roles: [!php/enum App\Enum\RoleEnum::PUBLIC->value] }
+        #- { path: ^/api, methods: [DELETE], roles: [!php/enum App\Enum\RoleEnum::ADMIN->value] } # Only admins can delete
+        #- { path: ^/api, roles: [!php/enum App\Enum\RoleEnum::USER->value, !php/enum App\Enum\RoleEnum::ADMIN->value] }
 
 when@test:
     security:

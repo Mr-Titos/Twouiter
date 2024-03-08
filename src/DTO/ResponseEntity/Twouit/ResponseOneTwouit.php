@@ -1,8 +1,8 @@
 <?php
 
-namespace App\ResponseEntity\Twouit;
+namespace App\DTO\ResponseEntity\Twouit;
 
-use App\ResponseEntity\User\ResponseUserMinimized;
+use App\DTO\ResponseEntity\User\ResponseUserMinimized;
 use DateTime;
 
 class ResponseOneTwouit

@@ -3,22 +3,22 @@
 namespace App\Controller;
 
 use App\Controller\AbstractTwouiterController\AbstractTwouiterController;
+use App\DTO\RequestEntity\User\RequestAddUser;
+use App\DTO\RequestEntity\User\RequestUpdateUser;
+use App\DTO\ResponseEntity\User\ResponseAllUser;
+use App\DTO\ResponseEntity\User\ResponseOneUser;
 use App\Entity\User;
 use App\Enum\RoleEnum;
-use App\RequestEntity\User\RequestAddUser;
-use App\RequestEntity\User\RequestUpdateUser;
-use App\ResponseEntity\User\ResponseAllUser;
-use App\ResponseEntity\User\ResponseOneUser;
-use App\Service\ObjectUpdatingService;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
+use Nelmio\ApiDocBundle\Annotation\Model;
+use Nelmio\ApiDocBundle\Annotation\Security;
+use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
-use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class UserController extends AbstractTwouiterController
@@ -32,7 +32,29 @@ class UserController extends AbstractTwouiterController
         $this->responseOneType = ResponseOneUser::class;
     }
 
-    #[Route('/user', name: 'get_user_all', methods: ['GET'])]
+    #[Route('/api/login', name: 'login_check', methods: ['POST'])]
+    public function login(#[CurrentUser] ?User $user): JsonResponse
+    {
+        var_dump($user);
+        return $this->json([
+            'message' => 'Welcome to your new controller!',
+            'user' => $user->getName(),
+        ]);
+    }
+
+    #[OA\Get(
+        summary: 'List of all user',
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'Users List',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: new Model(type: ResponseAllUser::class))        )
+    )]
+    #[OA\Tag(name: 'User')]
+    //#[Security(name: 'Bearer')]
+    #[Route('/api/user', name: 'get_user_all', methods: ['GET'])]
     public function indexU(EntityManagerInterface $entityManager): JsonResponse
     {
         $controllerResponse = parent::index($entityManager);
@@ -42,7 +64,12 @@ class UserController extends AbstractTwouiterController
         return $this->json($this->serializer->serialize($controllerResponse->getContent(), 'json'));
     }
 
-    #[Route('/user/{id}', name: 'get_user_one', methods: ['GET'])]
+    #[OA\Get(
+        summary: 'Detail of one user',
+    )]
+
+    #[OA\Tag(name: 'User')]
+    #[Route('/api/user/{id}', name: 'get_user_one', methods: ['GET'])]
     public function detailU(EntityManagerInterface $entityManager, $id): JsonResponse
     {
         $controllerResponse = parent::detail($entityManager, $id);
@@ -51,8 +78,8 @@ class UserController extends AbstractTwouiterController
         }
         return $this->json($this->serializer->serialize($controllerResponse->getContent(), 'json'));
     }
-
-    #[Route('/user', name: 'create_user', methods: ['POST'])]
+    #[OA\Tag(name: 'User')]
+    #[Route('/api/user', name: 'create_user', methods: ['POST'])]
     public function createU(Request $request, EntityManagerInterface $entityManager, ValidatorInterface $validator, UserPasswordHasherInterface $passwordHasher): JsonResponse
     {
         $controllerResponse = parent::create($request, $entityManager, $validator);
@@ -76,8 +103,8 @@ class UserController extends AbstractTwouiterController
         return $this->json(['content' => 'Saved new object with id '.$entity->getId(),])->setStatusCode($controllerResponse->getStatusCode());
 
     }
-
-    #[Route('/user/{id}', name: 'update_user', methods: ['PUT'])]
+    #[OA\Tag(name: 'User')]
+    #[Route('/api/user/{id}', name: 'update_user', methods: ['PUT'])]
     public function updateU(Request $request, EntityManagerInterface $entityManager, ValidatorInterface $validator, $id): JsonResponse
     {
         $controllerResponse = parent::update($request, $entityManager, $validator, $id);
@@ -92,7 +119,8 @@ class UserController extends AbstractTwouiterController
         return $this->json(['content' => 'Updated object with id '.$entity->getId(),])->setStatusCode($controllerResponse->getStatusCode());
     }
 
-    #[Route('/user/{id}', name: 'delete_user', methods: ['DELETE'])]
+    #[OA\Tag(name: 'User')]
+    #[Route('/api/user/{id}', name: 'delete_user', methods: ['DELETE'])]
     public function deleteU(EntityManagerInterface $entityManager, $id): JsonResponse
     {
         $controllerResponse = parent::delete($entityManager, $id);
@@ -111,7 +139,8 @@ class UserController extends AbstractTwouiterController
         return $this->json(['content' => $controllerResponse->getMessage()]);
     }
 
-    #[Route('/user/{id}/addFriend/{idF}', name: 'addFriend_user', methods: ['PUT'])]
+    #[OA\Tag(name: 'User')]
+    #[Route('/api/user/{id}/addFriend/{idF}', name: 'addFriend_user', methods: ['PUT'])]
     public function addFriend(EntityManagerInterface $entityManager, $id, $idF): JsonResponse
     {
         try {
@@ -137,6 +166,7 @@ class UserController extends AbstractTwouiterController
         }
     }
 
+    #[OA\Tag(name: 'User')]
     #[Route('/user/{id}/removeFriend/{idF}', name: 'removeFriend_user', methods: ['PUT'])]
     public function removeFriend(EntityManagerInterface $entityManager, $id, $idF): JsonResponse
     {
