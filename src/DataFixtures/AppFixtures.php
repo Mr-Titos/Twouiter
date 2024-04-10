@@ -20,7 +20,7 @@ class AppFixtures extends Fixture
         for ($i = 0; $i < $nbUsers; $i++) {
             $user = new User();
             $user->setName('Hell Diver ' . $i);
-            $user->setMail('helldiver'. $i . '@democracy.com ');
+            $user->setMail('helldiver'. $i . '@democracy.com');
             $user->setLogin($user->getMail());
             $user->setPassword('password'. $i);
             $user->setDescription('I am a FREE CITIZEN ' . $i);

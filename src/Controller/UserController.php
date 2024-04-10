@@ -33,16 +33,6 @@ class UserController extends AbstractTwouiterController
         $this->responseOneType = ResponseOneUser::class;
     }
 
-    #[Route('/api/login', name: 'login_check', methods: ['POST'])]
-    public function login(#[CurrentUser] ?User $user): JsonResponse
-    {
-        var_dump($user);
-        return $this->json([
-            'message' => 'Welcome to your new controller!',
-            'user' => $user->getName(),
-        ]);
-    }
-
     #[OA\Get(
         description: 'List of all user',
         summary: 'List of all user',

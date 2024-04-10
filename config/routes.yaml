@@ -5,7 +5,7 @@ controllers:
     type: attribute
 
 login_check:
-    path: /api/login_check
+    path: /api/login
     methods: [POST]
 
 app.swagger_ui:
