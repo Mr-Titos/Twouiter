@@ -1,7 +1,7 @@
 nelmio_api_doc:
     documentation:
         servers:
-            -   url: http://twouiter.fr/doc
+            -   url: http://twouiter.fr/
                 description: Twouiter API
         info:
             title: Twouiter API

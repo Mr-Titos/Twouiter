@@ -4,12 +4,19 @@ namespace App\DTO\ResponseEntity\User;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Nelmio\ApiDocBundle\Annotation\Model;
+use OpenApi\Attributes as OA;
 
 class ResponseOneUser
 {
     private int $id;
     private string $name;
     private string $mail;
+
+    #[OA\Property(
+        type: 'array',
+        items: new OA\Items(ref: new Model(type: ResponseAllUser::class))
+    )]
     private Collection $friends;
 
     function __construct($user) {

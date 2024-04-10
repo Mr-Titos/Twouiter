@@ -21,6 +21,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
+#[OA\Tag(name: 'User')]
 class UserController extends AbstractTwouiterController
 {
     function __construct() {
@@ -43,17 +44,21 @@ class UserController extends AbstractTwouiterController
     }
 
     #[OA\Get(
+        description: 'List of all user',
         summary: 'List of all user',
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(
+                    type: 'array',
+                    items: new OA\Items(ref: new Model(type: ResponseAllUser::class))
+                )
+            ),
+            new OA\Response(response: 400, description: 'code 400, Bad request =('),
+            new OA\Response(response: 500, description: 'code 500, ooops !'),
+        ]
     )]
-    #[OA\Response(
-        response: 200,
-        description: 'Users List',
-        content: new OA\JsonContent(
-            type: 'array',
-            items: new OA\Items(ref: new Model(type: ResponseAllUser::class))        )
-    )]
-    #[OA\Tag(name: 'User')]
-    //#[Security(name: 'Bearer')]
     #[Route('/api/user', name: 'get_user_all', methods: ['GET'])]
     public function indexU(EntityManagerInterface $entityManager): JsonResponse
     {
@@ -65,10 +70,22 @@ class UserController extends AbstractTwouiterController
     }
 
     #[OA\Get(
+        description: 'Detail of one user',
         summary: 'Detail of one user',
+        parameters: [
+            new OA\Parameter(name: 'id', description: 'user ID', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new Model(type: ResponseOneUser::class)
+            ),
+            new OA\Response(response: 400, description: 'Bad request =('),
+            new OA\Response(response: 500, description: 'Ooops !'),
+        ]
     )]
-
-    #[OA\Tag(name: 'User')]
+    //#[Security(name: 'Bearer')]
     #[Route('/api/user/{id}', name: 'get_user_one', methods: ['GET'])]
     public function detailU(EntityManagerInterface $entityManager, $id): JsonResponse
     {
@@ -78,7 +95,24 @@ class UserController extends AbstractTwouiterController
         }
         return $this->json($this->serializer->serialize($controllerResponse->getContent(), 'json'));
     }
-    #[OA\Tag(name: 'User')]
+
+    #[OA\Post(
+        description: 'Create one user',
+        summary: 'Create one user',
+        requestBody: new OA\RequestBody(
+            description: 'Request body',
+            required: true,
+            content: new Model(type: RequestAddUser::class)
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success'
+            ),
+            new OA\Response(response: 400, description: 'Bad request =('),
+            new OA\Response(response: 500, description: 'Ooops !'),
+        ]
+    )]
     #[Route('/api/user', name: 'create_user', methods: ['POST'])]
     public function createU(Request $request, EntityManagerInterface $entityManager, ValidatorInterface $validator, UserPasswordHasherInterface $passwordHasher): JsonResponse
     {
@@ -101,9 +135,25 @@ class UserController extends AbstractTwouiterController
         $entityManager->flush();
 
         return $this->json(['content' => 'Saved new object with id '.$entity->getId(),])->setStatusCode($controllerResponse->getStatusCode());
-
     }
-    #[OA\Tag(name: 'User')]
+
+    #[OA\Put(
+        description: 'Update one user',
+        summary: 'Update one user',
+        requestBody: new OA\RequestBody(
+            description: 'Request body',
+            required: true,
+            content: new Model(type: RequestUpdateUser::class)
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success'
+            ),
+            new OA\Response(response: 400, description: 'Bad request =('),
+            new OA\Response(response: 500, description: 'Ooops !'),
+        ]
+    )]
     #[Route('/api/user/{id}', name: 'update_user', methods: ['PUT'])]
     public function updateU(Request $request, EntityManagerInterface $entityManager, ValidatorInterface $validator, $id): JsonResponse
     {
@@ -119,7 +169,21 @@ class UserController extends AbstractTwouiterController
         return $this->json(['content' => 'Updated object with id '.$entity->getId(),])->setStatusCode($controllerResponse->getStatusCode());
     }
 
-    #[OA\Tag(name: 'User')]
+    #[OA\Delete(
+        description: 'Delete one user',
+        summary: 'Delete one user',
+        parameters: [
+            new OA\Parameter(name: 'id', description: 'user ID', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success'
+            ),
+            new OA\Response(response: 400, description: 'Bad request =('),
+            new OA\Response(response: 500, description: 'Ooops !'),
+        ]
+    )]
     #[Route('/api/user/{id}', name: 'delete_user', methods: ['DELETE'])]
     public function deleteU(EntityManagerInterface $entityManager, $id): JsonResponse
     {
@@ -139,7 +203,23 @@ class UserController extends AbstractTwouiterController
         return $this->json(['content' => $controllerResponse->getMessage()]);
     }
 
-    #[OA\Tag(name: 'User')]
+
+    #[OA\Put(
+        description: 'Add a friend',
+        summary: 'Add a friend',
+        parameters: [
+            new OA\Parameter(name: 'id', description: 'user ID', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'idF', description: 'friend ID', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success'
+            ),
+            new OA\Response(response: 400, description: 'Bad request =('),
+            new OA\Response(response: 500, description: 'Ooops !'),
+        ]
+    )]
     #[Route('/api/user/{id}/addFriend/{idF}', name: 'addFriend_user', methods: ['PUT'])]
     public function addFriend(EntityManagerInterface $entityManager, $id, $idF): JsonResponse
     {
@@ -166,8 +246,24 @@ class UserController extends AbstractTwouiterController
         }
     }
 
-    #[OA\Tag(name: 'User')]
-    #[Route('/user/{id}/removeFriend/{idF}', name: 'removeFriend_user', methods: ['PUT'])]
+
+    #[OA\Put(
+        description: 'Remove a friend',
+        summary: 'Remove a friend',
+        parameters: [
+            new OA\Parameter(name: 'id', description: 'user ID', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'idF', description: 'friend ID', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success'
+            ),
+            new OA\Response(response: 400, description: 'Bad request =('),
+            new OA\Response(response: 500, description: 'Ooops !'),
+        ]
+    )]
+    #[Route('/api/user/{id}/removeFriend/{idF}', name: 'removeFriend_user', methods: ['PUT'])]
     public function removeFriend(EntityManagerInterface $entityManager, $id, $idF): JsonResponse
     {
         try {

@@ -4,7 +4,7 @@ security:
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
     # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
     providers:
-        # used as a test because Symfony JWT way's to load user is not shit
+        # used as a test because Symfony JWT way's to load user
         #user_test:
         #    id: App\Security\UserProvider
         # used to reload user from session & other features (e.g. switch_user)
@@ -17,7 +17,6 @@ security:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
-            # a firewall with no pattern should be defined last because it will match all requests
 
         login:
             pattern: ^/api/login
@@ -49,7 +48,7 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
-        #- { path: ^/api/login, roles: [!php/enum App\Enum\RoleEnum::PUBLIC->value] }
+        #- { path: ^/api/login, roles: [!php/enum App\Enum\RoleEnum::PUBLIC->value] } # Maybe remove the default role PUBLIC ?
         #- { path: ^/api, methods: [DELETE], roles: [!php/enum App\Enum\RoleEnum::ADMIN->value] } # Only admins can delete
         #- { path: ^/api, roles: [!php/enum App\Enum\RoleEnum::USER->value, !php/enum App\Enum\RoleEnum::ADMIN->value] }
 
